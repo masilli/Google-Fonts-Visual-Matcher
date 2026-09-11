@@ -1,0 +1,634 @@
+[
+  {
+    "family": "Abril Fatface",
+    "font_family": "Abril Fatface",
+    "variant": "Regular",
+    "file_name": "AbrilFatface-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Abril+Fatface",
+    "id": 0
+  },
+  {
+    "family": "Albert Sans",
+    "font_family": "Albert Sans",
+    "variant": "Regular",
+    "file_name": "AlbertSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Albert+Sans",
+    "id": 1
+  },
+  {
+    "family": "Alfa Slab One",
+    "font_family": "Alfa Slab One",
+    "variant": "Regular",
+    "file_name": "AlfaSlabOne-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Alfa+Slab+One",
+    "id": 2
+  },
+  {
+    "family": "Alumni Sans",
+    "font_family": "Alumni Sans",
+    "variant": "Regular",
+    "file_name": "AlumniSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Alumni+Sans",
+    "id": 3
+  },
+  {
+    "family": "Anton",
+    "font_family": "Anton",
+    "variant": "Regular",
+    "file_name": "Anton-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Anton",
+    "id": 4
+  },
+  {
+    "family": "Arvo",
+    "font_family": "Arvo",
+    "variant": "Regular",
+    "file_name": "Arvo-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Arvo",
+    "id": 5
+  },
+  {
+    "family": "Barlow Condensed",
+    "font_family": "Barlow Condensed",
+    "variant": "Bold",
+    "file_name": "BarlowCondensed-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Barlow+Condensed",
+    "id": 6
+  },
+  {
+    "family": "Barlow Condensed",
+    "font_family": "Barlow Condensed",
+    "variant": "Regular",
+    "file_name": "BarlowCondensed-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Barlow+Condensed",
+    "id": 7
+  },
+  {
+    "family": "Bebas Neue",
+    "font_family": "Bebas Neue",
+    "variant": "Regular",
+    "file_name": "BebasNeue-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Bebas+Neue",
+    "id": 8
+  },
+  {
+    "family": "Black Ops One",
+    "font_family": "Black Ops One",
+    "variant": "Regular",
+    "file_name": "BlackOpsOne-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Black+Ops+One",
+    "id": 9
+  },
+  {
+    "family": "Bodoni Moda",
+    "font_family": "Bodoni Moda",
+    "variant": "Regular",
+    "file_name": "BodoniModa-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Bodoni+Moda",
+    "id": 10
+  },
+  {
+    "family": "Bungee",
+    "font_family": "Bungee",
+    "variant": "Regular",
+    "file_name": "Bungee-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Bungee",
+    "id": 11
+  },
+  {
+    "family": "Bungee Shade",
+    "font_family": "Bungee Shade",
+    "variant": "Regular",
+    "file_name": "BungeeShade-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Bungee+Shade",
+    "id": 12
+  },
+  {
+    "family": "Castoro",
+    "font_family": "Castoro",
+    "variant": "Regular",
+    "file_name": "Castoro-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Castoro",
+    "id": 13
+  },
+  {
+    "family": "Caveat",
+    "font_family": "Caveat",
+    "variant": "Regular",
+    "file_name": "Caveat-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Caveat",
+    "id": 14
+  },
+  {
+    "family": "Chango",
+    "font_family": "Chango",
+    "variant": "Regular",
+    "file_name": "Chango-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Chango",
+    "id": 15
+  },
+  {
+    "family": "Cinzel",
+    "font_family": "Cinzel",
+    "variant": "Regular",
+    "file_name": "Cinzel-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Cinzel",
+    "id": 16
+  },
+  {
+    "family": "Cinzel Decorative",
+    "font_family": "Cinzel Decorative",
+    "variant": "Regular",
+    "file_name": "CinzelDecorative-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Cinzel+Decorative",
+    "id": 17
+  },
+  {
+    "family": "Comfortaa",
+    "font_family": "Comfortaa",
+    "variant": "Regular",
+    "file_name": "Comfortaa-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Comfortaa",
+    "id": 18
+  },
+  {
+    "family": "Cormorant Garamond",
+    "font_family": "Cormorant Garamond",
+    "variant": "Regular",
+    "file_name": "CormorantGaramond-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Cormorant+Garamond",
+    "id": 19
+  },
+  {
+    "family": "Crete Round",
+    "font_family": "Crete Round",
+    "variant": "Regular",
+    "file_name": "CreteRound-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Crete+Round",
+    "id": 20
+  },
+  {
+    "family": "DM Sans",
+    "font_family": "DM Sans",
+    "variant": "Bold",
+    "file_name": "DM_Sans-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/DM+Sans",
+    "id": 21
+  },
+  {
+    "family": "DM Sans",
+    "font_family": "DM Sans",
+    "variant": "Regular",
+    "file_name": "DM_Sans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/DM+Sans",
+    "id": 22
+  },
+  {
+    "family": "DM Serif Display",
+    "font_family": "DM Serif Display",
+    "variant": "Regular",
+    "file_name": "DM_Serif_Display-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/DM+Serif+Display",
+    "id": 23
+  },
+  {
+    "family": "Dosis",
+    "font_family": "Dosis",
+    "variant": "Regular",
+    "file_name": "Dosis-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Dosis",
+    "id": 24
+  },
+  {
+    "family": "EB Garamond",
+    "font_family": "EB Garamond",
+    "variant": "Regular",
+    "file_name": "EB_Garamond-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/EB+Garamond",
+    "id": 25
+  },
+  {
+    "family": "Fira Code",
+    "font_family": "Fira Code",
+    "variant": "Regular",
+    "file_name": "FiraCode-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Fira+Code",
+    "id": 26
+  },
+  {
+    "family": "Fraunces",
+    "font_family": "Fraunces",
+    "variant": "Regular",
+    "file_name": "Fraunces-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Fraunces",
+    "id": 27
+  },
+  {
+    "family": "Inconsolata",
+    "font_family": "Inconsolata",
+    "variant": "Regular",
+    "file_name": "Inconsolata-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Inconsolata",
+    "id": 28
+  },
+  {
+    "family": "Inter",
+    "font_family": "Inter",
+    "variant": "Bold",
+    "file_name": "Inter-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Inter",
+    "id": 29
+  },
+  {
+    "family": "Inter",
+    "font_family": "Inter",
+    "variant": "Regular",
+    "file_name": "Inter-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Inter",
+    "id": 30
+  },
+  {
+    "family": "JetBrains Mono",
+    "font_family": "JetBrains Mono",
+    "variant": "Regular",
+    "file_name": "JetBrainsMono-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/JetBrains+Mono",
+    "id": 31
+  },
+  {
+    "family": "Lato",
+    "font_family": "Lato",
+    "variant": "Bold",
+    "file_name": "Lato-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Lato",
+    "id": 32
+  },
+  {
+    "family": "Lato",
+    "font_family": "Lato",
+    "variant": "Regular",
+    "file_name": "Lato-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Lato",
+    "id": 33
+  },
+  {
+    "family": "Lexend",
+    "font_family": "Lexend",
+    "variant": "Regular",
+    "file_name": "Lexend-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Lexend",
+    "id": 34
+  },
+  {
+    "family": "Libre Baskerville",
+    "font_family": "Libre Baskerville",
+    "variant": "Regular",
+    "file_name": "LibreBaskerville-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Libre+Baskerville",
+    "id": 35
+  },
+  {
+    "family": "Lora",
+    "font_family": "Lora",
+    "variant": "Bold",
+    "file_name": "Lora-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Lora",
+    "id": 36
+  },
+  {
+    "family": "Lora",
+    "font_family": "Lora",
+    "variant": "Regular",
+    "file_name": "Lora-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Lora",
+    "id": 37
+  },
+  {
+    "family": "Manrope",
+    "font_family": "Manrope",
+    "variant": "Regular",
+    "file_name": "Manrope-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Manrope",
+    "id": 38
+  },
+  {
+    "family": "Merriweather",
+    "font_family": "Merriweather",
+    "variant": "Regular",
+    "file_name": "Merriweather-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Merriweather",
+    "id": 39
+  },
+  {
+    "family": "Montserrat",
+    "font_family": "Montserrat",
+    "variant": "Regular",
+    "file_name": "Montserrat-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Montserrat",
+    "id": 40
+  },
+  {
+    "family": "Noto Sans",
+    "font_family": "Noto Sans",
+    "variant": "Bold",
+    "file_name": "NotoSans-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Noto+Sans",
+    "id": 41
+  },
+  {
+    "family": "Noto Sans",
+    "font_family": "Noto Sans",
+    "variant": "Regular",
+    "file_name": "NotoSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Noto+Sans",
+    "id": 42
+  },
+  {
+    "family": "Nunito",
+    "font_family": "Nunito",
+    "variant": "Regular",
+    "file_name": "Nunito-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Nunito",
+    "id": 43
+  },
+  {
+    "family": "Open Sans",
+    "font_family": "Open Sans",
+    "variant": "Bold",
+    "file_name": "OpenSans-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Open+Sans",
+    "id": 44
+  },
+  {
+    "family": "Open Sans",
+    "font_family": "Open Sans",
+    "variant": "Regular",
+    "file_name": "OpenSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Open+Sans",
+    "id": 45
+  },
+  {
+    "family": "Oswald",
+    "font_family": "Oswald",
+    "variant": "Regular",
+    "file_name": "Oswald-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Oswald",
+    "id": 46
+  },
+  {
+    "family": "Outfit",
+    "font_family": "Outfit",
+    "variant": "Bold",
+    "file_name": "Outfit-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Outfit",
+    "id": 47
+  },
+  {
+    "family": "Outfit",
+    "font_family": "Outfit",
+    "variant": "Regular",
+    "file_name": "Outfit-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Outfit",
+    "id": 48
+  },
+  {
+    "family": "PT Serif",
+    "font_family": "PT Serif",
+    "variant": "Regular",
+    "file_name": "PTSerif-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/PT+Serif",
+    "id": 49
+  },
+  {
+    "family": "Pacifico",
+    "font_family": "Pacifico",
+    "variant": "Regular",
+    "file_name": "Pacifico-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Pacifico",
+    "id": 50
+  },
+  {
+    "family": "Playfair Display SC",
+    "font_family": "Playfair Display SC",
+    "variant": "Regular",
+    "file_name": "Playfair-DisplaySC.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Playfair+Display+SC",
+    "id": 51
+  },
+  {
+    "family": "Playfair Display",
+    "font_family": "Playfair Display",
+    "variant": "Regular",
+    "file_name": "PlayfairDisplay-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Playfair+Display",
+    "id": 52
+  },
+  {
+    "family": "Plus Jakarta Sans",
+    "font_family": "Plus Jakarta Sans",
+    "variant": "Regular",
+    "file_name": "PlusJakartaSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Plus+Jakarta+Sans",
+    "id": 53
+  },
+  {
+    "family": "Poppins",
+    "font_family": "Poppins",
+    "variant": "Regular",
+    "file_name": "Poppins-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Poppins",
+    "id": 54
+  },
+  {
+    "family": "Prata",
+    "font_family": "Prata",
+    "variant": "Regular",
+    "file_name": "Prata-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Prata",
+    "id": 55
+  },
+  {
+    "family": "Quicksand",
+    "font_family": "Quicksand",
+    "variant": "Regular",
+    "file_name": "Quicksand-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Quicksand",
+    "id": 56
+  },
+  {
+    "family": "Raleway",
+    "font_family": "Raleway",
+    "variant": "Regular",
+    "file_name": "Raleway-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Raleway",
+    "id": 57
+  },
+  {
+    "family": "Righteous",
+    "font_family": "Righteous",
+    "variant": "Regular",
+    "file_name": "Righteous-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Righteous",
+    "id": 58
+  },
+  {
+    "family": "Roboto",
+    "font_family": "Roboto",
+    "variant": "Bold",
+    "file_name": "Roboto-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Roboto",
+    "id": 59
+  },
+  {
+    "family": "Roboto",
+    "font_family": "Roboto",
+    "variant": "Regular",
+    "file_name": "Roboto-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Roboto",
+    "id": 60
+  },
+  {
+    "family": "Roboto Mono",
+    "font_family": "Roboto Mono",
+    "variant": "Regular",
+    "file_name": "RobotoMono-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Roboto+Mono",
+    "id": 61
+  },
+  {
+    "family": "Roboto Slab",
+    "font_family": "Roboto Slab",
+    "variant": "Regular",
+    "file_name": "RobotoSlab-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Roboto+Slab",
+    "id": 62
+  },
+  {
+    "family": "Rubik Beastly",
+    "font_family": "Rubik Beastly",
+    "variant": "Regular",
+    "file_name": "RubikBeastly-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Rubik+Beastly",
+    "id": 63
+  },
+  {
+    "family": "Russo One",
+    "font_family": "Russo One",
+    "variant": "Regular",
+    "file_name": "RussoOne-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Russo+One",
+    "id": 64
+  },
+  {
+    "family": "Sora",
+    "font_family": "Sora",
+    "variant": "Regular",
+    "file_name": "Sora-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Sora",
+    "id": 65
+  },
+  {
+    "family": "Source Code Pro",
+    "font_family": "Source Code Pro",
+    "variant": "Regular",
+    "file_name": "SourceCodePro-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Source+Code+Pro",
+    "id": 66
+  },
+  {
+    "family": "Space Grotesk",
+    "font_family": "Space Grotesk",
+    "variant": "Bold",
+    "file_name": "SpaceGrotesk-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Space+Grotesk",
+    "id": 67
+  },
+  {
+    "family": "Space Grotesk",
+    "font_family": "Space Grotesk",
+    "variant": "Regular",
+    "file_name": "SpaceGrotesk-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Space+Grotesk",
+    "id": 68
+  },
+  {
+    "family": "Space Mono",
+    "font_family": "Space Mono",
+    "variant": "Regular",
+    "file_name": "SpaceMono-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Space+Mono",
+    "id": 69
+  },
+  {
+    "family": "Staatliches",
+    "font_family": "Staatliches",
+    "variant": "Regular",
+    "file_name": "Staatliches-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Staatliches",
+    "id": 70
+  },
+  {
+    "family": "Syne",
+    "font_family": "Syne",
+    "variant": "Bold",
+    "file_name": "Syne-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Syne",
+    "id": 71
+  },
+  {
+    "family": "Syne",
+    "font_family": "Syne",
+    "variant": "Regular",
+    "file_name": "Syne-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Syne",
+    "id": 72
+  },
+  {
+    "family": "Teko",
+    "font_family": "Teko",
+    "variant": "Regular",
+    "file_name": "Teko-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Teko",
+    "id": 73
+  },
+  {
+    "family": "Urbanist",
+    "font_family": "Urbanist",
+    "variant": "Regular",
+    "file_name": "Urbanist-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Urbanist",
+    "id": 74
+  },
+  {
+    "family": "Varela Round",
+    "font_family": "Varela Round",
+    "variant": "Regular",
+    "file_name": "VarelaRound-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Varela+Round",
+    "id": 75
+  },
+  {
+    "family": "Work Sans",
+    "font_family": "Work Sans",
+    "variant": "Bold",
+    "file_name": "WorkSans-Bold.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Work+Sans",
+    "id": 76
+  },
+  {
+    "family": "Work Sans",
+    "font_family": "Work Sans",
+    "variant": "Regular",
+    "file_name": "WorkSans-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Work+Sans",
+    "id": 77
+  },
+  {
+    "family": "Zilla Slab",
+    "font_family": "Zilla Slab",
+    "variant": "Regular",
+    "file_name": "ZillaSlab-Regular.ttf",
+    "google_fonts_url": "https://fonts.google.com/specimen/Zilla+Slab",
+    "id": 78
+  }
+]

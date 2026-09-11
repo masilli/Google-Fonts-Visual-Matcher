@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Fonts Visual Matcher</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter UI Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Cropper.js for Interactive Text ROI Cropping -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .dropzone-active {
+      border-color: #6366f1 !important;
+      background-color: #f5f3ff !important;
+    }
+    .specimen-box:focus {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    .cropper-view-box, .cropper-face {
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased">
+
+  <!-- Navigation / Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-indigo-100">
+          G
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">Google Fonts Visual Matcher</h1>
+          <p class="text-xs text-slate-500">Dynamic On-The-Fly Rendering & CLIP Typographic Embeddings</p>
+        </div>
+      </div>
+
+      <!-- Health Status Indicator -->
+      <div id="statusBadge" class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+        <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span>
+        <span id="statusText">Checking server status...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+
+    <!-- Hero / Intro -->
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+        Identify fonts from images instantly
+      </h2>
+      <p class="mt-3 text-base text-slate-600">
+        Upload or paste a screenshot of text. Tesseract OCR extracts the exact word, renders our local font library dynamically on the fly, and uses OpenAI CLIP embeddings to compare pure typographic characteristics without spelling bias.
+      </p>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div id="errorAlert" class="hidden mb-6 max-w-3xl mx-auto bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start space-x-3 text-rose-800">
+      <svg class="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <div class="flex-1">
+        <h4 class="text-sm font-semibold" id="errorTitle">Upload Error</h4>
+        <p class="text-xs text-rose-700 mt-0.5" id="errorMessage">Something went wrong.</p>
+      </div>
+      <button onclick="dismissError()" class="text-rose-400 hover:text-rose-600 text-sm">✕</button>
+    </div>
+
+    <!-- Upload & Configuration Section -->
+    <div class="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+      
+      <!-- Dropzone (Shown when no file is selected) -->
+      <div
+        id="dropzone"
+        class="border-2 border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 relative"
+      >
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/png, image/jpeg, image/webp"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+
+        <div id="dropzonePrompt" class="space-y-3">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-800">
+              <span class="text-indigo-600 hover:underline">Click to upload</span> or drag and drop an image
+            </p>
+            <p class="text-xs text-slate-500 mt-1">PNG, JPG, or WebP (you can also paste via <kbd class="px-1 py-0.5 bg-slate-200 rounded text-[10px] font-mono">Cmd/Ctrl+V</kbd>)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected File Preview Container (Isolated outside of dropzone) -->
+      <div id="previewContainer" class="hidden bg-slate-50/80 rounded-2xl border border-slate-200 p-6 flex flex-col items-center space-y-4">
+        <div class="relative max-w-sm rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+          <img id="previewImage" src="#" alt="Preview of uploaded font" class="max-h-60 object-contain mx-auto" />
+        </div>
+        <div class="text-center">
+          <p id="fileName" class="text-sm font-semibold text-slate-800 truncate max-w-xs"></p>
+          <p id="fileSize" class="text-xs text-slate-500 mt-0.5"></p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button
+            type="button"
+            id="cropFocusBtn"
+            class="inline-flex items-center space-x-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+            </svg>
+            <span>Crop & Focus Text</span>
+          </button>
+          <button
+            type="button"
+            id="removeFileBtn"
+            class="inline-flex items-center space-x-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-xs"
+          >
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span>Change Image</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Detected Text & Typographic Style Section -->
+      <div id="detectedTextSection" class="hidden pt-5 border-t border-slate-100 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <label for="detectedTextInput" class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+            </svg>
+            <span>Detected Text & Style</span>
+          </label>
+          <div class="flex items-center space-x-2">
+            <span id="detectedCategoryBadge" class="hidden text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+              Style: Auto
+            </span>
+            <span id="detectedTextBadge" class="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+              OCR / Manual Text
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2 relative">
+            <input
+              type="text"
+              id="detectedTextInput"
+              placeholder="Type or verify the word in the uploaded image..."
+              class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-900 font-semibold transition-all"
+            />
+          </div>
+
+          <div>
+            <select
+              id="categoryOverrideSelect"
+              class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all cursor-pointer"
+            >
+              <option value="">Style: Auto-detect (Zero-Shot)</option>
+              <option value="sans-serif">Sans-Serif (Grotesque / Geometric)</option>
+              <option value="serif">Serif (Editorial / Classic)</option>
+              <option value="display">Display (Headline / Expressive)</option>
+              <option value="handwriting">Handwriting (Script / Cursive)</option>
+              <option value="monospace">Monospace (Code / Typewriter)</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-400">
+          Two-Stage Cloud Matching: Zero-Shot style classification filters 1,580+ Google Fonts, then on-demand micro-subsets (~2 KB) are streamed directly into RAM and matched with CLIP.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-3 flex flex-col sm:flex-row items-center justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+        <button
+          type="button"
+          id="clearBtn"
+          class="hidden w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+        >
+          Clear
+        </button>
+
+        <button
+          type="button"
+          id="matchBtn"
+          disabled
+          class="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-xl shadow-md shadow-indigo-100 transition-all flex items-center justify-center space-x-2"
+        >
+          <svg id="matchIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <svg id="loadingSpinner" class="hidden animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="matchBtnText">Find Closest Fonts</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="hidden max-w-3xl mx-auto mt-10">
+      
+      <!-- Section Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900">Top Font Matches</h3>
+          <p class="text-xs text-slate-500">Ranked by cosine similarity of 512-d CLIP visual feature embeddings</p>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
+          Top 3 Matches
+        </span>
+      </div>
+
+      <!-- Interactive Specimen Controls Toolbar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mb-6 space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="globalPreviewInput" class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+              </svg>
+              <span>Interactive Specimen Text</span>
+            </label>
+            <span class="text-[11px] text-slate-400">Live preview rendered with Google Fonts stylesheet</span>
+          </div>
+          
+          <input
+            type="text"
+            id="globalPreviewInput"
+            value="The quick brown fox jumps over the lazy dog"
+            placeholder="Type custom preview text here..."
+            class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800 transition-all font-medium"
+          />
+        </div>
+
+        <!-- Presets and Font Size Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+          
+          <!-- Sample Text Presets -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Presets:</span>
+            <button type="button" class="preset-btn text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors" data-text="The quick brown fox jumps over the lazy dog">Sentence</button>
+            <button type="button" class="preset-btn text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors" data-text="Hamburgfonts 123">Hamburgfonts</button>
+            <button type="button" class="preset-btn text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors" data-text="ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz">Alphabet</button>
+            <button type="button" class="preset-btn text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors" data-text="0123456789 &?!@#$%*+-=">Numerals</button>
+          </div>
+
+          <!-- Font Size Slider & Toggles -->
+          <div class="flex items-center space-x-3">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Size:</span>
+            
+            <div class="flex items-center space-x-2">
+              <input
+                type="range"
+                id="fontSizeSlider"
+                min="16"
+                max="64"
+                value="30"
+                class="w-24 sm:w-28 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              <span id="fontSizeDisplay" class="text-xs font-mono font-semibold text-slate-700 w-8">30px</span>
+            </div>
+
+            <!-- Size Buttons -->
+            <div class="flex items-center space-x-1 border-l border-slate-200 pl-2">
+              <button type="button" class="size-btn text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 font-medium text-slate-600" data-size="20">20px</button>
+              <button type="button" class="size-btn text-[11px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold" data-size="30">30px</button>
+              <button type="button" class="size-btn text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 font-medium text-slate-600" data-size="44">44px</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Result Cards Container -->
+      <div id="cardsContainer" class="space-y-4">
+        <!-- Dynamically injected match cards -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-auto py-6 text-center text-xs text-slate-500">
+    <p>Google Fonts Visual Matcher · Dynamic On-The-Fly Rendering with OCR & OpenAI CLIP</p>
+  </footer>
+
+  <!-- Interactive Cropper Modal -->
+  <div id="cropModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+            </svg>
+            <span>Focus & Crop Text Region</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Drag to tightly bound the target word to eliminate background noise and isolate character shapes.</p>
+        </div>
+        <button type="button" id="cancelCropBtn" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center text-sm font-bold transition-colors">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-hidden min-h-[300px] max-h-[55vh] bg-slate-950 rounded-2xl flex items-center justify-center p-2">
+        <img id="cropperImage" class="max-w-full block" />
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+        <button type="button" id="rotateCropBtn" class="inline-flex items-center space-x-1.5 text-xs text-slate-600 hover:text-slate-900 font-medium px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>Rotate 90°</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button type="button" id="cancelCropBtn2" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+            Cancel
+          </button>
+          <button type="button" id="applyCropBtn" class="px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-100 transition-colors">
+            Apply Crop
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-xl border border-slate-800 flex items-center space-x-2 transition-all">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span id="toastMessage">Copied to clipboard!</span>
+  </div>
+
+  <!-- Frontend Logic -->
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const dropzonePrompt = document.getElementById('dropzonePrompt');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const matchBtn = document.getElementById('matchBtn');
+    const matchBtnText = document.getElementById('matchBtnText');
+    const matchIcon = document.getElementById('matchIcon');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const resultsSection = document.getElementById('resultsSection');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorTitle = document.getElementById('errorTitle');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Detected Text Elements
+    const detectedTextSection = document.getElementById('detectedTextSection');
+    const detectedTextInput = document.getElementById('detectedTextInput');
+    const detectedTextBadge = document.getElementById('detectedTextBadge');
+    const detectedCategoryBadge = document.getElementById('detectedCategoryBadge');
+    const categoryOverrideSelect = document.getElementById('categoryOverrideSelect');
+
+    // Interactive Typography Controls
+    const globalPreviewInput = document.getElementById('globalPreviewInput');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+
+    // Cropper Elements
+    const cropFocusBtn = document.getElementById('cropFocusBtn');
+    const cropModal = document.getElementById('cropModal');
+    const cropperImage = document.getElementById('cropperImage');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    const cancelCropBtn2 = document.getElementById('cancelCropBtn2');
+    const applyCropBtn = document.getElementById('applyCropBtn');
+    const rotateCropBtn = document.getElementById('rotateCropBtn');
+    let cropperInstance = null;
+
+    let currentFile = null;
+    let currentPreviewText = globalPreviewInput.value;
+    let currentFontSize = parseInt(fontSizeSlider.value, 10);
+    const loadedFontLinks = new Set();
+    let currentMatchMeta = null;
+
+    // Toast notification helper
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      const toastMsg = document.getElementById('toastMessage');
+      toastMsg.textContent = msg;
+      toast.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2000);
+    }
+
+    // 1. Fetch server health on page load
+    async function checkHealth() {
+      try {
+        const res = await fetch('/health');
+        if (!res.ok) throw new Error('Status ' + res.status);
+        const data = await res.json();
+        if (data.index_loaded) {
+          const fontTotal = data.catalog_fonts || data.indexed_fonts;
+          statusBadge.className = 'flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+          statusBadge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>${fontTotal} Google Fonts (Cloud Subsetting, ${data.device.toUpperCase()})</span>
+          `;
+        } else {
+          statusBadge.className = 'flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
+          statusBadge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>Font Catalog Empty</span>
+          `;
+        }
+      } catch (err) {
+        statusBadge.className = 'flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
+        statusBadge.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+          <span>Server Offline</span>
+        `;
+      }
+    }
+    checkHealth();
+
+    // 2. Drag & Drop events
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dropzone-active');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dropzone-active');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      previewContainer.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        previewContainer.classList.add('ring-2', 'ring-indigo-400', 'bg-indigo-50/40');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      previewContainer.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        previewContainer.classList.remove('ring-2', 'ring-indigo-400', 'bg-indigo-50/40');
+      }, false);
+    });
+
+    previewContainer.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    });
+
+    // 3. File Input Change
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    // 4. Paste image from clipboard
+    window.addEventListener('paste', (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          handleFileSelect(blob);
+          break;
+        }
+      }
+    });
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function handleFileSelect(file) {
+      if (!file.type.startsWith('image/')) {
+        showError('Invalid File Type', 'Please upload a valid image file (PNG, JPG, or WebP).');
+        return;
+      }
+      dismissError();
+      currentFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        fileName.textContent = file.name || 'Pasted Image';
+        fileSize.textContent = formatBytes(file.size);
+
+        // Hide dropzone so the file input is not overlaying anything
+        dropzone.classList.add('hidden');
+        previewContainer.classList.remove('hidden');
+        detectedTextSection.classList.remove('hidden');
+        detectedTextInput.value = '';
+        detectedTextBadge.textContent = 'Auto-detecting on match...';
+        detectedTextBadge.className = 'text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200';
+        clearBtn.classList.remove('hidden');
+        matchBtn.disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Interactive Cropper Modal
+    function openCropper() {
+      if (!previewImage.src || previewImage.src === '#' || previewImage.src.endsWith('#')) return;
+      cropperImage.src = previewImage.src;
+      cropModal.classList.remove('hidden');
+
+      if (cropperInstance) {
+        cropperInstance.destroy();
+      }
+
+      cropperInstance = new Cropper(cropperImage, {
+        viewMode: 1,
+        dragMode: 'crop',
+        autoCropArea: 0.9,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+    }
+
+    function closeCropper() {
+      cropModal.classList.add('hidden');
+      if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+      }
+    }
+
+    cropFocusBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCropper();
+    });
+
+    cancelCropBtn.addEventListener('click', closeCropper);
+    cancelCropBtn2.addEventListener('click', closeCropper);
+
+    rotateCropBtn.addEventListener('click', () => {
+      if (cropperInstance) {
+        cropperInstance.rotate(90);
+      }
+    });
+
+    applyCropBtn.addEventListener('click', () => {
+      if (!cropperInstance) return;
+      const canvas = cropperInstance.getCroppedCanvas();
+      if (!canvas) return;
+
+      canvas.toBlob((blob) => {
+        currentFile = new File([blob], 'cropped_selection.png', { type: 'image/png' });
+        previewImage.src = canvas.toDataURL('image/png');
+        fileName.textContent = 'Cropped Selection';
+        fileSize.textContent = formatBytes(blob.size);
+        closeCropper();
+        showToast('Text cropped & focused!');
+        // Reset old match results
+        resultsSection.classList.add('hidden');
+        cardsContainer.innerHTML = '';
+        detectedTextInput.value = '';
+        detectedTextBadge.textContent = 'Auto-detecting on match...';
+      }, 'image/png');
+    });
+
+    // Detected Text field manual edits
+    detectedTextInput.addEventListener('input', () => {
+      if (detectedTextInput.value.trim()) {
+        detectedTextBadge.textContent = 'User edited';
+        detectedTextBadge.className = 'text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200';
+      } else {
+        detectedTextBadge.textContent = 'Auto-detect on match';
+        detectedTextBadge.className = 'text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200';
+      }
+    });
+
+    // 5. Reset / Remove handlers
+    removeFileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetUpload();
+    });
+
+    clearBtn.addEventListener('click', resetUpload);
+
+    function resetUpload() {
+      currentFile = null;
+      fileInput.value = '';
+      previewImage.src = '#';
+      dropzone.classList.remove('hidden');
+      previewContainer.classList.add('hidden');
+      detectedTextSection.classList.add('hidden');
+      detectedTextInput.value = '';
+      clearBtn.classList.add('hidden');
+      matchBtn.disabled = true;
+      resultsSection.classList.add('hidden');
+      cardsContainer.innerHTML = '';
+      dismissError();
+    }
+
+    function showError(title, msg) {
+      errorTitle.textContent = title;
+      errorMessage.textContent = msg;
+      errorAlert.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function dismissError() {
+      errorAlert.classList.add('hidden');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 6. Dynamic Google Fonts Loading
+    function loadGoogleFont(fontFamily) {
+      if (!fontFamily) return;
+      const encodedFamily = encodeURIComponent(fontFamily.trim()).replace(/%20/g, '+');
+      if (loadedFontLinks.has(encodedFamily)) return;
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodedFamily}:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&display=swap`;
+      document.head.appendChild(link);
+      loadedFontLinks.add(encodedFamily);
+    }
+
+    // 7. Interactive Typography Controls Synchronization
+    function updateAllSpecimens(text) {
+      currentPreviewText = text;
+      const boxes = document.querySelectorAll('.specimen-box');
+      boxes.forEach(box => {
+        if (box.textContent !== text) {
+          box.textContent = text;
+        }
+      });
+    }
+
+    function updateAllSpecimensFontSize(sizePx) {
+      currentFontSize = sizePx;
+      fontSizeDisplay.textContent = sizePx + 'px';
+      fontSizeSlider.value = sizePx;
+      const boxes = document.querySelectorAll('.specimen-box');
+      boxes.forEach(box => {
+        box.style.fontSize = sizePx + 'px';
+      });
+
+      document.querySelectorAll('.size-btn').forEach(btn => {
+        if (parseInt(btn.dataset.size, 10) === sizePx) {
+          btn.className = 'size-btn text-[11px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-semibold';
+        } else {
+          btn.className = 'size-btn text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 font-medium text-slate-600';
+        }
+      });
+    }
+
+    globalPreviewInput.addEventListener('input', (e) => {
+      updateAllSpecimens(e.target.value);
+    });
+
+    fontSizeSlider.addEventListener('input', (e) => {
+      updateAllSpecimensFontSize(parseInt(e.target.value, 10));
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.dataset.text;
+        globalPreviewInput.value = text;
+        updateAllSpecimens(text);
+      });
+    });
+
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const size = parseInt(btn.dataset.size, 10);
+        updateAllSpecimensFontSize(size);
+      });
+    });
+
+    // One-click Code Export Helper
+    function copyExportSnippet(type, family) {
+      const familyEnc = encodeURIComponent(family).replace(/%20/g, '+');
+      const slug = family.toLowerCase().replace(/[^a-z0-9]/g, '');
+      let code = '';
+      if (type === 'link') {
+        code = `<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=${familyEnc}:wght@400;700&display=swap" rel="stylesheet">`;
+      } else if (type === 'import') {
+        code = `@import url('https://fonts.googleapis.com/css2?family=${familyEnc}:wght@400;700&display=swap');`;
+      } else if (type === 'tailwind') {
+        code = `// In tailwind.config.js\nfontFamily: {\n  '${slug}': ['"${family}"', 'sans-serif'],\n}`;
+      } else if (type === 'css') {
+        code = `font-family: '${family}', sans-serif;`;
+      }
+      navigator.clipboard.writeText(code).then(() => {
+        showToast(`Copied ${type.toUpperCase()} snippet!`);
+      }).catch(() => {
+        showToast('Copied to clipboard!');
+      });
+    }
+
+    // Clean Ink Extraction: isolates dark/light text ink without coloring background
+    function extractCleanInk(userImg) {
+      if (!userImg) return null;
+      const nw = userImg.naturalWidth || userImg.width || 0;
+      const nh = userImg.naturalHeight || userImg.height || 0;
+      if (nw === 0 || nh === 0) return null;
+
+      const off = document.createElement('canvas');
+      off.width = nw;
+      off.height = nh;
+      const ctx = off.getContext('2d');
+      ctx.drawImage(userImg, 0, 0, nw, nh);
+
+      const imgData = ctx.getImageData(0, 0, nw, nh);
+      const d = imgData.data;
+
+      // Sample border pixels to detect background luminance
+      let borderSum = 0;
+      let borderCount = 0;
+      for (let x = 0; x < nw; x += 2) {
+        const topIdx = (0 * nw + x) * 4;
+        const botIdx = ((nh - 1) * nw + x) * 4;
+        borderSum += (d[topIdx] + d[topIdx + 1] + d[topIdx + 2]) / 3;
+        borderSum += (d[botIdx] + d[botIdx + 1] + d[botIdx + 2]) / 3;
+        borderCount += 2;
+      }
+      for (let y = 0; y < nh; y += 2) {
+        const leftIdx = (y * nw + 0) * 4;
+        const rightIdx = (y * nw + (nw - 1)) * 4;
+        borderSum += (d[leftIdx] + d[leftIdx + 1] + d[leftIdx + 2]) / 3;
+        borderSum += (d[rightIdx] + d[rightIdx + 1] + d[rightIdx + 2]) / 3;
+        borderCount += 2;
+      }
+      const bgL = borderSum / Math.max(borderCount, 1);
+      const isLightBg = bgL > 128;
+
+      // Find tight bounding box of ink pixels
+      let minX = nw, minY = nh, maxX = 0, maxY = 0;
+      let foundInk = false;
+
+      for (let y = 0; y < nh; y++) {
+        for (let x = 0; x < nw; x++) {
+          const idx = (y * nw + x) * 4;
+          const b = (d[idx] + d[idx + 1] + d[idx + 2]) / 3;
+          const diff = isLightBg ? (bgL - b) : (b - bgL);
+          if (diff > 25) {
+            foundInk = true;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+
+      if (!foundInk) {
+        minX = 0; minY = 0; maxX = nw - 1; maxY = nh - 1;
+      }
+
+      // Add a slight 2px margin around tight ink bounds
+      minX = Math.max(0, minX - 2);
+      minY = Math.max(0, minY - 2);
+      maxX = Math.min(nw - 1, maxX + 2);
+      maxY = Math.min(nh - 1, maxY + 2);
+
+      const inkW = maxX - minX + 1;
+      const inkH = maxY - minY + 1;
+
+      const inkCanvas = document.createElement('canvas');
+      inkCanvas.width = inkW;
+      inkCanvas.height = inkH;
+      const inkCtx = inkCanvas.getContext('2d');
+      const inkImgData = inkCtx.createImageData(inkW, inkH);
+      const outD = inkImgData.data;
+
+      for (let y = 0; y < inkH; y++) {
+        for (let x = 0; x < inkW; x++) {
+          const srcIdx = ((y + minY) * nw + (x + minX)) * 4;
+          const outIdx = (y * inkW + x) * 4;
+          const b = (d[srcIdx] + d[srcIdx + 1] + d[srcIdx + 2]) / 3;
+          const diff = isLightBg ? (bgL - b) : (b - bgL);
+          const maxDiff = isLightBg ? bgL : (255 - bgL);
+          const strength = Math.max(0, Math.min(1, diff / Math.max(maxDiff * 0.65, 30)));
+
+          if (diff > 20) {
+            outD[outIdx] = 6;       // Neon Cyan R (#06b6d4)
+            outD[outIdx + 1] = 182; // Neon Cyan G
+            outD[outIdx + 2] = 212; // Neon Cyan B
+            outD[outIdx + 3] = Math.round(strength * 255);
+          } else {
+            outD[outIdx + 3] = 0;   // 100% Transparent background (no cyan rectangle!)
+          }
+        }
+      }
+      inkCtx.putImageData(inkImgData, 0, 0);
+
+      return {
+        canvas: inkCanvas,
+        w: inkW,
+        h: inkH,
+      };
+    }
+
+    // Stateful Glyph Diff & Side-by-Side Renderer
+    function renderGlyphDiff(canvas, userImg, text, family, state = {}) {
+      if (!canvas || !userImg) return;
+      const inkData = extractCleanInk(userImg);
+      if (!inkData) return;
+
+      const ctx = canvas.getContext('2d');
+      const containerW = canvas.parentElement ? canvas.parentElement.clientWidth : 640;
+      const w = Math.max(480, Math.min(760, containerW - 32));
+      const mode = state.mode || 'overlay';
+      const h = mode === 'split' ? 220 : 160;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      // Dark background
+      ctx.fillStyle = '#080c14';
+      ctx.fillRect(0, 0, w, h);
+
+      const blend = state.blend !== undefined ? state.blend : 0.5;
+      const scale = state.scale !== undefined ? state.scale : 1.0;
+      const offsetX = state.offsetX || 0;
+      const offsetY = state.offsetY || 0;
+
+      if (mode === 'overlay') {
+        // Overlay Mode:
+        const targetH = Math.min(h * 0.52, 75);
+        const userScale = targetH / Math.max(inkData.h, 1);
+        const userDrawW = inkData.w * userScale;
+        const userDrawH = inkData.h * userScale;
+        const userX = (w - userDrawW) / 2;
+        const userY = (h - userDrawH) / 2;
+
+        // Measure candidate font text to match height automatically
+        ctx.font = `600 ${targetH}px '${family}', sans-serif`;
+        const metrics = ctx.measureText(text);
+        const fontAscent = metrics.actualBoundingBoxAscent || targetH * 0.75;
+        const fontDescent = metrics.actualBoundingBoxDescent || targetH * 0.20;
+        const fontH = fontAscent + fontDescent;
+        const autoFontSize = Math.round(targetH * (userDrawH / Math.max(fontH, 1)));
+        const finalFontSize = Math.max(12, Math.round(autoFontSize * scale));
+
+        // 1. Draw User Ink in Neon Cyan with blend alpha
+        const userAlpha = Math.max(0.12, 1.0 - (blend - 0.5) * 1.5);
+        ctx.save();
+        ctx.globalAlpha = userAlpha;
+        ctx.drawImage(inkData.canvas, userX, userY, userDrawW, userDrawH);
+        ctx.restore();
+
+        // 2. Draw Candidate Font in Neon Coral with screen blend
+        const fontAlpha = Math.max(0.12, 1.0 - (0.5 - blend) * 1.5);
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.font = `600 ${finalFontSize}px '${family}', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = `rgba(244, 63, 94, ${fontAlpha})`;
+        ctx.fillText(text, userX + userDrawW / 2 + offsetX, userY + userDrawH / 2 + offsetY);
+        ctx.restore();
+
+      } else {
+        // Side-by-Side (Split) Mode:
+        const rowH = 75;
+        const targetH = Math.min(rowH * 0.65, 45);
+        const userScale = targetH / Math.max(inkData.h, 1);
+        const userDrawW = inkData.w * userScale;
+        const userDrawH = inkData.h * userScale;
+
+        // Top Row: User Original Ink
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('ORIGINAL UPLOADED INK', 20, 22);
+
+        const topY = 24 + (rowH - userDrawH) / 2;
+        ctx.drawImage(inkData.canvas, (w - userDrawW) / 2, topY, userDrawW, userDrawH);
+
+        // Subtle Divider Line
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, 110);
+        ctx.lineTo(w - 20, 110);
+        ctx.stroke();
+
+        // Bottom Row: Candidate Font
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillText(`SUGGESTED FONT: ${family.toUpperCase()}`, 20, 132);
+
+        ctx.font = `600 ${targetH}px '${family}', sans-serif`;
+        const metrics = ctx.measureText(text);
+        const fontAscent = metrics.actualBoundingBoxAscent || targetH * 0.75;
+        const fontDescent = metrics.actualBoundingBoxDescent || targetH * 0.20;
+        const fontH = fontAscent + fontDescent;
+        const autoFontSize = Math.round(targetH * (userDrawH / Math.max(fontH, 1)));
+        const finalFontSize = Math.max(12, Math.round(autoFontSize * scale));
+
+        const botY = 125 + rowH / 2 + offsetY;
+        ctx.font = `600 ${finalFontSize}px '${family}', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillText(text, w / 2 + offsetX, botY);
+      }
+    }
+
+    // 8. Submit to /api/match with dynamic OCR, category filter, and override support
+    matchBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+
+      dismissError();
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append('file', currentFile);
+      const overrideText = detectedTextInput.value.trim();
+      if (overrideText) {
+        formData.append('override_text', overrideText);
+      }
+      const categoryOverride = categoryOverrideSelect.value;
+      if (categoryOverride) {
+        formData.append('category_override', categoryOverride);
+      }
+
+      try {
+        const response = await fetch('/api/match', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData.detail || `Server responded with status ${response.status}`;
+          if (response.status === 422) {
+            detectedTextInput.focus();
+          }
+          throw new Error(errMsg);
+        }
+
+        const data = await response.json();
+        currentMatchMeta = data;
+        
+        // Populate detected text field and update badge
+        if (data.detected_text) {
+          detectedTextInput.value = data.detected_text;
+          detectedTextBadge.textContent = overrideText ? 'User confirmed' : 'Auto-detected via OCR';
+          detectedTextBadge.className = 'text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200';
+
+          // Sync detected text to the specimen preview input
+          globalPreviewInput.value = data.detected_text;
+          updateAllSpecimens(data.detected_text);
+        }
+
+        // Display detected typographic style and confidence
+        if (data.detected_category) {
+          const confPercent = Math.round((data.category_confidence || 1.0) * 100);
+          detectedCategoryBadge.textContent = `Style: ${data.detected_category.toUpperCase()} (${confPercent}%)`;
+          detectedCategoryBadge.className = 'text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200';
+          detectedCategoryBadge.classList.remove('hidden');
+        }
+
+        renderResults(data.matches || [], data);
+      } catch (err) {
+        showError('Matching Failed', err.message);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function setLoading(isLoading) {
+      matchBtn.disabled = isLoading;
+      if (isLoading) {
+        matchIcon.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        matchBtnText.textContent = 'Streaming Micro-Fonts & Matching...';
+      } else {
+        matchIcon.classList.remove('hidden');
+        loadingSpinner.classList.add('hidden');
+        matchBtnText.textContent = 'Find Closest Fonts';
+      }
+    }
+
+    // 9. Render dynamic font match cards with interactive specimen previews & tools
+    function renderResults(matches, metaData) {
+      cardsContainer.innerHTML = '';
+
+      if (!matches || matches.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="text-center p-8 bg-slate-50 border border-slate-200 rounded-2xl">
+            <p class="text-sm font-medium text-slate-600">No font matches found.</p>
+          </div>
+        `;
+        resultsSection.classList.remove('hidden');
+        return;
+      }
+
+      // Metadata Banner: Cloud pool, optical weight, skew angle
+      if (metaData) {
+        const isCloud = metaData.source === 'cloud_subset';
+        let weightName = 'Regular (400)';
+        const w = metaData.estimated_weight || 400;
+        if (w >= 800) weightName = 'ExtraBold (800)';
+        else if (w >= 700) weightName = 'Bold (700)';
+        else if (w >= 600) weightName = 'SemiBold (600)';
+        else if (w <= 300) weightName = 'Light (300)';
+
+        const skewDeg = metaData.detected_skew || 0.0;
+        const skewText = Math.abs(skewDeg) >= 0.5 ? `${skewDeg > 0 ? '+' : ''}${skewDeg}° (Corrected)` : '0.0° (Level)';
+
+        const banner = document.createElement('div');
+        banner.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-5';
+        banner.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full ${isCloud ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+              <span class="text-slate-800 font-semibold">${isCloud ? 'Google Fonts Cloud Catalog (1,580+ Families)' : 'Local Disk Fallback'}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-mono">In-Memory Subsetting (~2 KB/font in RAM) + SQLite Disk Cache</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+              Style: ${escapeHtml((metaData.detected_category || 'sans-serif').toUpperCase())} (${Math.round((metaData.category_confidence || 1.0) * 100)}%)
+            </span>
+            <span class="px-2.5 py-1 rounded-lg bg-white text-slate-700 font-semibold border border-slate-200 shadow-xs">
+              Optical Weight: ${escapeHtml(weightName)}
+            </span>
+            <span class="px-2.5 py-1 rounded-lg bg-white text-slate-700 font-semibold border border-slate-200 shadow-xs">
+              Deskew: ${escapeHtml(skewText)}
+            </span>
+          </div>
+        `;
+        cardsContainer.appendChild(banner);
+      }
+
+      matches.forEach((match, index) => {
+        const rank = index + 1;
+        const scorePercent = Math.max(0, Math.min(100, Math.round(match.similarity_score * 100)));
+
+        // Dynamically load font stylesheet from Google Fonts
+        loadGoogleFont(match.family);
+
+        // Styling based on match rank
+        let rankBadgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+        let cardBorderClass = 'border-slate-200 hover:border-slate-300';
+        if (rank === 1) {
+          rankBadgeClass = 'bg-amber-100 text-amber-800 border-amber-300 font-bold';
+          cardBorderClass = 'border-indigo-300 shadow-md shadow-indigo-50 ring-1 ring-indigo-200';
+        } else if (rank === 2) {
+          rankBadgeClass = 'bg-slate-200 text-slate-800 border-slate-300 font-semibold';
+        }
+
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl border ${cardBorderClass} p-5 sm:p-6 transition-all space-y-4`;
+
+        card.innerHTML = `
+          <!-- Card Header -->
+          <div class="flex items-start justify-between flex-wrap gap-2">
+            <div class="flex items-center space-x-2.5 flex-wrap">
+              <span class="text-xs px-2.5 py-1 rounded-full border ${rankBadgeClass}">
+                #${rank} Match
+              </span>
+              <h4 class="text-xl font-bold text-slate-900">${escapeHtml(match.family)}</h4>
+              <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
+                ${escapeHtml(match.variant)}
+              </span>
+              <span class="text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold uppercase tracking-wider">
+                ${escapeHtml(match.category || 'sans-serif')}
+              </span>
+            </div>
+
+            <a
+              href="${escapeHtml(match.google_fonts_url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              <span>Google Fonts</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+
+          <!-- Similarity Score Bar -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs font-medium">
+              <span class="text-slate-500">Typographic Match Score</span>
+              <span class="text-slate-800 font-semibold">${scorePercent}% (Calibrated: ${match.similarity_score.toFixed(4)} | Raw: ${match.raw_score !== undefined ? match.raw_score.toFixed(4) : 'N/A'})</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full transition-all duration-500" style="width: ${scorePercent}%"></div>
+            </div>
+          </div>
+
+          <!-- Toolbar: Quick Export & Glyph Diff -->
+          <div class="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-slate-100">
+            <!-- Code Export Buttons -->
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Export:</span>
+              <button type="button" class="export-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-all" data-type="link" data-family="${escapeHtml(match.family)}">&lt;link&gt;</button>
+              <button type="button" class="export-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-all" data-type="import" data-family="${escapeHtml(match.family)}">@import</button>
+              <button type="button" class="export-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-all" data-type="tailwind" data-family="${escapeHtml(match.family)}">Tailwind</button>
+              <button type="button" class="export-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-all" data-type="css" data-family="${escapeHtml(match.family)}">CSS</button>
+            </div>
+
+            <!-- Glyph Diff Toggle Button -->
+            <button
+              type="button"
+              class="diff-toggle-btn inline-flex items-center space-x-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1 rounded-lg transition-colors"
+              data-family="${escapeHtml(match.family)}"
+            >
+              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              <span>Compare Glyph Diff</span>
+            </button>
+          </div>
+
+          <!-- Side-by-Side Direct Comparison Strip -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto min-w-0">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Your Image:</span>
+              <div class="h-10 bg-white border border-slate-200 rounded-lg px-2.5 flex items-center shadow-xs overflow-hidden">
+                <img src="${previewImage.src}" class="max-h-8 max-w-[160px] object-contain" />
+              </div>
+            </div>
+            <div class="text-slate-300 font-bold hidden sm:block">⇄</div>
+            <div class="flex items-center space-x-3 w-full sm:w-auto min-w-0 flex-1">
+              <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider whitespace-nowrap">${escapeHtml(match.family)}:</span>
+              <div class="h-10 px-2 flex items-center overflow-x-auto w-full">
+                <span style="font-family: '${escapeHtml(match.family)}', sans-serif; font-size: 26px; line-height: 1;" class="text-slate-900 font-semibold truncate">
+                  ${escapeHtml(currentPreviewText)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glyph Diff Ghost Overlay & Side-by-Side Container (Toggled) -->
+          <div class="diff-container hidden bg-slate-900 rounded-2xl p-4 text-white space-y-3">
+            <!-- Header with Mode & Legend -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5 text-xs border-b border-slate-800 pb-2.5">
+              <!-- Mode Buttons -->
+              <div class="flex items-center space-x-1 bg-slate-800 p-0.5 rounded-lg border border-slate-700/60">
+                <button type="button" class="diff-mode-btn text-[11px] px-2.5 py-1 rounded-md font-semibold bg-indigo-600 text-white transition-colors" data-mode="overlay">
+                  Ghost Overlay
+                </button>
+                <button type="button" class="diff-mode-btn text-[11px] px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors" data-mode="split">
+                  Side-by-Side
+                </button>
+              </div>
+
+              <!-- Color Legend -->
+              <div class="flex items-center space-x-3 text-[11px]">
+                <span class="flex items-center space-x-1 text-cyan-400">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span>
+                  <span>Your Ink</span>
+                </span>
+                <span class="flex items-center space-x-1 text-rose-400">
+                  <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+                  <span>${escapeHtml(match.family)}</span>
+                </span>
+                <span class="flex items-center space-x-1 text-violet-300">
+                  <span class="w-2 h-2 rounded-full bg-violet-400 inline-block"></span>
+                  <span>Match</span>
+                </span>
+              </div>
+
+              <!-- Reset / Auto-Fit Button -->
+              <button type="button" class="diff-reset-btn text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium border border-slate-700 transition-colors">
+                Auto-Fit
+              </button>
+            </div>
+
+            <!-- Precision Controls: Scale, Blend & Nudge -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+              <!-- 1. Font Size / Scale -->
+              <div class="flex items-center justify-between space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50">
+                <span class="text-[11px] text-slate-400 whitespace-nowrap">Font Size:</span>
+                <button type="button" class="diff-scale-down text-slate-400 hover:text-white px-1 font-bold text-sm select-none">−</button>
+                <input type="range" class="diff-scale-slider flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" min="50" max="180" value="100" />
+                <button type="button" class="diff-scale-up text-slate-400 hover:text-white px-1 font-bold text-sm select-none">+</button>
+                <span class="diff-scale-val text-[11px] font-mono text-indigo-300 font-semibold w-8 text-right">100%</span>
+              </div>
+
+              <!-- 2. Blend Ratio -->
+              <div class="flex items-center justify-between space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50">
+                <span class="text-[11px] text-slate-400 whitespace-nowrap">Blend:</span>
+                <input type="range" class="diff-blend-slider flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" min="0" max="100" value="50" />
+                <span class="diff-blend-val text-[11px] font-mono text-slate-400 w-7 text-right">50%</span>
+              </div>
+
+              <!-- 3. Position Nudge -->
+              <div class="flex items-center justify-between space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-xl border border-slate-700/50">
+                <span class="text-[11px] text-slate-400 whitespace-nowrap">Nudge:</span>
+                <div class="flex items-center space-x-1">
+                  <button type="button" class="diff-nudge-btn px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[11px] font-bold text-slate-200" data-dx="-2" data-dy="0">←</button>
+                  <button type="button" class="diff-nudge-btn px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[11px] font-bold text-slate-200" data-dx="2" data-dy="0">→</button>
+                  <button type="button" class="diff-nudge-btn px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[11px] font-bold text-slate-200" data-dx="0" data-dy="-2">↑</button>
+                  <button type="button" class="diff-nudge-btn px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[11px] font-bold text-slate-200" data-dx="0" data-dy="2">↓</button>
+                </div>
+                <span class="diff-pos-val text-[10px] font-mono text-slate-400 text-right">0, 0</span>
+              </div>
+            </div>
+
+            <!-- Canvas Container with Interactive Drag & Pan -->
+            <div class="overflow-x-auto py-1 flex justify-center items-center bg-slate-950 rounded-xl p-2 min-h-[160px] cursor-grab active:cursor-grabbing border border-slate-800 select-none relative">
+              <canvas class="diff-canvas max-w-full h-auto rounded-lg"></canvas>
+            </div>
+            
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+              <span>💡 Tip: Click and drag anywhere on the canvas to freely align letter stems</span>
+              <span class="text-[10px] text-slate-500 italic">Adjust size to match optical cap-height</span>
+            </div>
+          </div>
+
+          <!-- Curated Typography Pairings -->
+          ${match.recommended_pairings && match.recommended_pairings.length > 0 ? `
+            <div class="flex items-center flex-wrap gap-1.5 pt-1">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Pairs well with:</span>
+              ${match.recommended_pairings.map(p => `
+                <a
+                  href="https://fonts.google.com/specimen/${encodeURIComponent(p).replace(/%20/g, '+')}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 px-2.5 py-0.5 rounded-md transition-colors"
+                >
+                  <span>${escapeHtml(p)}</span>
+                  <span class="ml-1 text-[9px] text-slate-400">↗</span>
+                </a>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <!-- Specimen Preview Section with Direct Editable Box -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Live Specimen Preview</span>
+              <span class="text-[11px] text-slate-400 flex items-center space-x-1">
+                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                <span>Click directly below to edit</span>
+              </span>
+            </div>
+
+            <div
+              contenteditable="true"
+              spellcheck="false"
+              class="specimen-box w-full bg-slate-50/70 hover:bg-white border border-slate-200 rounded-xl p-4 sm:p-5 focus:bg-white focus:border-indigo-500 outline-none text-slate-800 transition-all cursor-text overflow-x-auto"
+              data-family="${escapeHtml(match.family)}"
+              style="font-family: '${escapeHtml(match.family)}', sans-serif; font-size: ${currentFontSize}px; line-height: 1.25;"
+            >${escapeHtml(currentPreviewText)}</div>
+          </div>
+        `;
+
+        // Code export event listeners
+        card.querySelectorAll('.export-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const type = btn.dataset.type;
+            const fam = btn.dataset.family;
+            copyExportSnippet(type, fam);
+          });
+        });
+
+        // Stateful Glyph diff event listeners
+        const diffState = {
+          mode: 'overlay',
+          scale: 1.0,
+          blend: 0.5,
+          offsetX: 0,
+          offsetY: 0,
+          isDragging: false,
+          dragStartX: 0,
+          dragStartY: 0,
+        };
+
+        const diffBtn = card.querySelector('.diff-toggle-btn');
+        const diffContainer = card.querySelector('.diff-container');
+        const diffCanvas = card.querySelector('.diff-canvas');
+        const diffBlendSlider = card.querySelector('.diff-blend-slider');
+        const diffBlendVal = card.querySelector('.diff-blend-val');
+        const diffScaleSlider = card.querySelector('.diff-scale-slider');
+        const diffScaleVal = card.querySelector('.diff-scale-val');
+        const diffScaleDown = card.querySelector('.diff-scale-down');
+        const diffScaleUp = card.querySelector('.diff-scale-up');
+        const diffPosVal = card.querySelector('.diff-pos-val');
+        const diffResetBtn = card.querySelector('.diff-reset-btn');
+        const diffModeBtns = card.querySelectorAll('.diff-mode-btn');
+
+        function updateDiff() {
+          const targetText = currentMatchMeta ? currentMatchMeta.detected_text : currentPreviewText;
+          renderGlyphDiff(diffCanvas, previewImage, targetText, match.family, diffState);
+        }
+
+        diffBtn.addEventListener('click', () => {
+          const isHidden = diffContainer.classList.contains('hidden');
+          if (isHidden) {
+            diffContainer.classList.remove('hidden');
+            diffBtn.classList.add('bg-indigo-100', 'text-indigo-900');
+            updateDiff();
+          } else {
+            diffContainer.classList.add('hidden');
+            diffBtn.classList.remove('bg-indigo-100', 'text-indigo-900');
+          }
+        });
+
+        // Mode switch
+        diffModeBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            diffState.mode = mode;
+            diffModeBtns.forEach(b => {
+              if (b === btn) {
+                b.className = 'diff-mode-btn text-[11px] px-2.5 py-1 rounded-md font-semibold bg-indigo-600 text-white transition-colors';
+              } else {
+                b.className = 'diff-mode-btn text-[11px] px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors';
+              }
+            });
+            updateDiff();
+          });
+        });
+
+        // Blend slider
+        diffBlendSlider.addEventListener('input', () => {
+          diffState.blend = parseInt(diffBlendSlider.value, 10) / 100;
+          diffBlendVal.textContent = `${diffBlendSlider.value}%`;
+          updateDiff();
+        });
+
+        // Scale slider & +/- buttons
+        diffScaleSlider.addEventListener('input', () => {
+          diffState.scale = parseInt(diffScaleSlider.value, 10) / 100;
+          diffScaleVal.textContent = `${diffScaleSlider.value}%`;
+          updateDiff();
+        });
+
+        diffScaleDown.addEventListener('click', () => {
+          const val = Math.max(50, parseInt(diffScaleSlider.value, 10) - 5);
+          diffScaleSlider.value = val;
+          diffState.scale = val / 100;
+          diffScaleVal.textContent = `${val}%`;
+          updateDiff();
+        });
+
+        diffScaleUp.addEventListener('click', () => {
+          const val = Math.min(180, parseInt(diffScaleSlider.value, 10) + 5);
+          diffScaleSlider.value = val;
+          diffState.scale = val / 100;
+          diffScaleVal.textContent = `${val}%`;
+          updateDiff();
+        });
+
+        // Nudge buttons
+        card.querySelectorAll('.diff-nudge-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            diffState.offsetX += parseInt(btn.dataset.dx, 10);
+            diffState.offsetY += parseInt(btn.dataset.dy, 10);
+            diffPosVal.textContent = `${diffState.offsetX}, ${diffState.offsetY}`;
+            updateDiff();
+          });
+        });
+
+        // Reset
+        diffResetBtn.addEventListener('click', () => {
+          diffState.scale = 1.0;
+          diffState.offsetX = 0;
+          diffState.offsetY = 0;
+          diffState.blend = 0.5;
+          diffScaleSlider.value = 100;
+          diffScaleVal.textContent = '100%';
+          diffBlendSlider.value = 50;
+          diffBlendVal.textContent = '50%';
+          diffPosVal.textContent = '0, 0';
+          updateDiff();
+        });
+
+        // Interactive Drag on canvas
+        diffCanvas.addEventListener('mousedown', (e) => {
+          diffState.isDragging = true;
+          diffState.dragStartX = e.clientX;
+          diffState.dragStartY = e.clientY;
+          diffCanvas.parentElement.classList.add('cursor-grabbing');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!diffState.isDragging) return;
+          const dx = e.clientX - diffState.dragStartX;
+          const dy = e.clientY - diffState.dragStartY;
+          diffState.offsetX += dx;
+          diffState.offsetY += dy;
+          diffState.dragStartX = e.clientX;
+          diffState.dragStartY = e.clientY;
+          diffPosVal.textContent = `${diffState.offsetX}, ${diffState.offsetY}`;
+          updateDiff();
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (diffState.isDragging) {
+            diffState.isDragging = false;
+            diffCanvas.parentElement.classList.remove('cursor-grabbing');
+          }
+        });
+
+        // Touch drag support
+        diffCanvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            diffState.isDragging = true;
+            diffState.dragStartX = e.touches[0].clientX;
+            diffState.dragStartY = e.touches[0].clientY;
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!diffState.isDragging || e.touches.length !== 1) return;
+          const dx = e.touches[0].clientX - diffState.dragStartX;
+          const dy = e.touches[0].clientY - diffState.dragStartY;
+          diffState.offsetX += dx;
+          diffState.offsetY += dy;
+          diffState.dragStartX = e.touches[0].clientX;
+          diffState.dragStartY = e.touches[0].clientY;
+          diffPosVal.textContent = `${diffState.offsetX}, ${diffState.offsetY}`;
+          updateDiff();
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          diffState.isDragging = false;
+        });
+
+        // Direct input synchronization from inside this card's specimen box
+        const specimenBox = card.querySelector('.specimen-box');
+        specimenBox.addEventListener('input', (e) => {
+          const newText = e.target.textContent;
+          currentPreviewText = newText;
+          globalPreviewInput.value = newText;
+          document.querySelectorAll('.specimen-box').forEach(box => {
+            if (box !== e.target && box.textContent !== newText) {
+              box.textContent = newText;
+            }
+          });
+          // Update open diff canvas if active
+          if (!diffContainer.classList.contains('hidden')) {
+            updateDiff();
+          }
+        });
+
+        cardsContainer.appendChild(card);
+      });
+
+      resultsSection.classList.remove('hidden');
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+</html>

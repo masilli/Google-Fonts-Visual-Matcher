@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+torch
+torchvision
+pillow
+faiss-cpu
+numpy
+pydantic
+python-multipart
+transformers
+pytesseract

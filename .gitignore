@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# FAISS / Index artifacts & temp files
+*.index
+*.bin
+*.pkl
+
+# SQLite Cache & Databases
+font_cache.db
+*.db
+*.sqlite
+*.sqlite3
+
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
