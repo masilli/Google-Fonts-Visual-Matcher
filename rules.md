@@ -15,6 +15,8 @@ Google Fonts Visual Matcher: A locally-hosted tool that takes an image of text, 
 4. **Vector Search:** Use `faiss.IndexFlatIP` with L2-normalized vectors to achieve Cosine Similarity matching.
 5. **Image Preprocessing:** Always convert user-uploaded images to grayscale. Implement basic background detection (if background is dark and text is light, invert the image so text is always black on a white background).
 6. **Code Style:** Use Python type hinting (`->`, `list`, `dict`), robust error handling (FastAPI `HTTPException`), and modular functions.
+7. **Version Control Automation:** After every change, modification, or completed task, automatically stage, commit (with a clear, descriptive message), and push all changes to GitHub (`git push origin main`).
+
 
 # Directory Structure
 /fonts (directory for raw .ttf/.otf files)
