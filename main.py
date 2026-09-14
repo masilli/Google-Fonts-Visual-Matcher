@@ -55,6 +55,9 @@ DB_PATH = Path("font_cache.db")
 CANVAS_SIZE = (224, 224)
 CLIP_MODEL_NAME = "openai/clip-vit-base-patch32"
 EMBEDDING_DIM = 512
+DINO_MODEL_NAME = "dinov2_vits14_reg"
+FINE_EMBEDDING_DIM = 384  # DINOv2-S hidden size
+FINE_STAGE_LIMIT = 60  # candidates refined with per-glyph embeddings
 
 # Typographic macro archetypes for Zero-Shot CLIP coarse classification
 TYPOGRAPHY_ARCHETYPES: list[tuple[str, str]] = [
@@ -214,6 +217,8 @@ class HealthStatus(BaseModel):
     device: str
     model: str
     embedding_dimension: int
+    fine_model: str
+    fine_embedding_dimension: int
     catalog_fonts: int
     indexed_fonts: int
     index_loaded: bool
@@ -247,6 +252,59 @@ def load_clip_model(
     model.eval()
     model.to(device)
     return model, processor
+
+
+def load_dino_model(
+    model_name: str = DINO_MODEL_NAME,
+    device: torch.device = torch.device("cpu"),
+) -> tuple[torch.nn.Module, Any]:
+    """Load DINOv2 via torch.hub (Meta's official repo, public weights) and return (model, transform).
+
+    Used for the fine-grained per-glyph matching stage. HuggingFace mirrors of
+    facebook/dinov2* are gated; torch.hub pulls weights from Meta's public CDN instead.
+    """
+    from torchvision.transforms import v2 as T
+
+    logger.info(f"Loading DINOv2 fine-matcher '{model_name}' via torch.hub...")
+    model = torch.hub.load("facebookresearch/dinov2", model_name, verbose=False)
+    model.eval()
+    model.to(device)
+
+    transform = T.Compose([
+        T.ToImage(),
+        T.ToDtype(torch.float32, scale=True),
+        T.Resize(256, interpolation=T.InterpolationMode.BICUBIC),
+        T.CenterCrop(224),
+        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    return model, transform
+
+
+def embed_batch_dino(
+    model: torch.nn.Module,
+    transform: Any,
+    images: list[Image.Image],
+    device: torch.device,
+    batch_size: int = 64,
+) -> np.ndarray:
+    """Embed images with DINOv2 and return L2-normalized CLS-token vectors (N, D)."""
+    if not images:
+        return np.empty((0, FINE_EMBEDDING_DIM), dtype=np.float32)
+    features: list[np.ndarray] = []
+    for start in range(0, len(images), batch_size):
+        chunk = images[start : start + batch_size]
+        batch = torch.stack([transform(img) for img in chunk]).to(device)
+        with torch.no_grad():
+            outputs = model.forward_features(batch)
+        if isinstance(outputs, dict):
+            cls_tokens = outputs["x_norm_clstoken"]
+        elif outputs.ndim == 3:
+            cls_tokens = outputs[:, 0, :]
+        else:
+            cls_tokens = outputs
+        cls_tokens = cls_tokens / cls_tokens.norm(p=2, dim=-1, keepdim=True)
+        features.append(cls_tokens.cpu().numpy())
+    return np.vstack(features).astype(np.float32)
 
 
 def load_font_library() -> list[dict[str, Any]]:
@@ -575,6 +633,104 @@ def render_font_sample_from_bytes(font_bytes: bytes, text: str, font_size: int =
     return normalize_text_crop(canvas, target_size=CANVAS_SIZE, padding_ratio=0.1, apply_sharpen=True)
 
 
+def render_candidate_parts(renderer, text: str, max_chars: int = 8) -> list[Image.Image]:
+    """Render a candidate font as a whole-word crop plus individual per-glyph crops."""
+    parts = [renderer(text)]
+    count = 0
+    for ch in text:
+        if not ch.strip():
+            continue
+        if count >= max_chars:
+            break
+        parts.append(renderer(ch))
+        count += 1
+    return parts
+
+
+def extract_query_glyph_crops(cleaned_img: Image.Image, max_glyphs: int = 12) -> list[Image.Image]:
+    """Extract per-character ink crops from the user image via Tesseract char boxes."""
+    crops: list[Image.Image] = []
+    try:
+        boxes = pytesseract.image_to_boxes(cleaned_img, config="--psm 7")
+    except Exception as exc:
+        logger.debug(f"Glyph box extraction failed: {exc}")
+        return crops
+
+    for line in boxes.splitlines():
+        parts = line.split()
+        if len(parts) < 5:
+            continue
+        glyph = parts[0]
+        if not glyph.isprintable() or glyph == " ":
+            continue
+        try:
+            left, bottom, right, top = (int(x) for x in parts[1:5])
+        except ValueError:
+            continue
+        if right - left < 2 or bottom - top < 2:
+            continue
+        pad = 3
+        box = (
+            max(0, left - pad),
+            max(0, top - pad),
+            min(cleaned_img.width, right + pad),
+            min(cleaned_img.height, bottom + pad),
+        )
+        crop = cleaned_img.crop(box)
+        if crop.mode != "RGB":
+            crop = crop.convert("RGB")
+        crops.append(
+            normalize_text_crop(crop, target_size=CANVAS_SIZE, padding_ratio=0.1, apply_sharpen=False)
+        )
+        if len(crops) >= max_glyphs:
+            break
+    return crops
+
+
+def compose_fine_feature(
+    normalized_parts: np.ndarray,
+    full_weight: float = 0.75,
+) -> np.ndarray:
+    """Blend whole-word and per-glyph embeddings into a single L2-normalized vector."""
+    parts = np.asarray(normalized_parts, dtype=np.float32)
+    if parts.ndim != 2 or parts.shape[0] == 0:
+        raise ValueError("compose_fine_feature requires a 2-D array of normalized embeddings")
+    if parts.shape[0] == 1:
+        return parts[0]
+    full = parts[0]
+    glyph_mean = parts[1:].mean(axis=0)
+    glyph_mean = glyph_mean / (float(np.linalg.norm(glyph_mean)) or 1.0)
+    combined = full_weight * full + (1.0 - full_weight) * glyph_mean
+    return combined / (float(np.linalg.norm(combined)) or 1.0)
+
+
+def embed_batch_dino(
+    model: torch.nn.Module,
+    transform: Any,
+    images: list[Image.Image],
+    device: torch.device,
+    batch_size: int = 64,
+) -> np.ndarray:
+    """Embed images with DINOv2 and return L2-normalized CLS-token vectors (N, D)."""
+    if not images:
+        return np.empty((0, FINE_EMBEDDING_DIM), dtype=np.float32)
+    features: list[np.ndarray] = []
+    for start in range(0, len(images), batch_size):
+        chunk = images[start : start + batch_size]
+        batch = torch.stack([transform(img) for img in chunk]).to(device)
+        with torch.no_grad():
+            outputs = model.forward_features(batch)
+        if isinstance(outputs, dict):
+            cls_tokens = outputs["x_norm_clstoken"]
+        elif outputs.ndim == 3:
+            cls_tokens = outputs[:, 0, :]
+        else:
+            cls_tokens = outputs
+        cls_tokens = cls_tokens / cls_tokens.norm(p=2, dim=-1, keepdim=True)
+        features.append(cls_tokens.cpu().numpy())
+    return np.vstack(features).astype(np.float32)
+
+
 # Backward-compatible alias
 render_font_candidate = render_font_sample
 
@@ -781,6 +937,16 @@ async def lifespan(app: FastAPI):
     app.state.model = model
     app.state.processor = processor
 
+    try:
+        dino_model, dino_transform = load_dino_model(DINO_MODEL_NAME, device)
+        app.state.dino_model = dino_model
+        app.state.dino_transform = dino_transform
+        logger.info("DINOv2 per-glyph fine-matcher loaded for Stage 2.")
+    except Exception as exc:
+        app.state.dino_model = None
+        app.state.dino_transform = None
+        logger.warning(f"DINOv2 fine-matcher failed to load ({exc}); falling back to CLIP-only matching.")
+
     catalog = load_google_fonts_catalog()
     app.state.catalog = catalog
 
@@ -799,7 +965,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Google Fonts Visual Matcher API",
     description="Dynamic on-the-fly visual typography matching using OCR and OpenAI CLIP embeddings.",
-    version="3.1.0",
+    version="3.2.0",
     lifespan=lifespan,
 )
 
@@ -851,6 +1017,8 @@ async def health_check():
         device=str(device),
         model=CLIP_MODEL_NAME,
         embedding_dimension=EMBEDDING_DIM,
+        fine_model=getattr(app.state, "dino_model", None) is not None and DINO_MODEL_NAME or "disabled_fallback_clip",
+        fine_embedding_dimension=FINE_EMBEDDING_DIM,
         catalog_fonts=len(catalog),
         indexed_fonts=len(font_library),
         index_loaded=len(catalog) > 0 or len(font_library) > 0,
@@ -944,8 +1112,7 @@ async def match_font(
             detail="No text could be detected in the image. Please enter the word in the 'Detected Text' field and try again.",
         )
 
-    # Multi-scale crops for high-frequency lead glyph details
-    full_crop, patch_crop = extract_multiscale_crops(deskewed_full, target_text)
+    full_crop = query_crop
 
     model: CLIPModel = app.state.model
     processor: CLIPProcessor = app.state.processor
@@ -1002,16 +1169,19 @@ async def match_font(
             except Exception as exc:
                 logger.warning(f"Error fetching font subset for {fam}: {exc}")
 
-    rendered_candidates = []
-    metadata_candidates = []
+    candidate_defs: list[dict[str, Any]] = []
+    metadata_candidates: list[dict[str, Any]] = []
     source = "cloud_subset"
 
-    # If cloud subsetting succeeded with sufficient variants:
     if len(fetched_candidates) >= 5:
         for cand in fetched_candidates:
-            cand_img = render_font_sample_from_bytes(cand["bytes"], target_text, font_size=72)
-            rendered_candidates.append(cand_img)
             cat = next((f["category"] for f in catalog if f["family"] == cand["family"]), detected_category)
+            candidate_defs.append({
+                "bytes": cand["bytes"],
+                "path": None,
+                "family": cand["family"],
+                "variant": cand["variant"],
+            })
             metadata_candidates.append({
                 "family": cand["family"],
                 "variant": cand["variant"],
@@ -1023,8 +1193,12 @@ async def match_font(
         source = "local_fallback"
         logger.warning(f"Cloud subsetting yielded only {len(fetched_candidates)} variants. Falling back to local font pool.")
         for item in font_library:
-            cand_img = render_font_sample(item["font_path"], target_text, font_size=72)
-            rendered_candidates.append(cand_img)
+            candidate_defs.append({
+                "bytes": None,
+                "path": item["font_path"],
+                "family": item["family"],
+                "variant": item["variant"],
+            })
             metadata_candidates.append({
                 "family": item["family"],
                 "variant": item["variant"],
@@ -1032,46 +1206,79 @@ async def match_font(
                 "google_fonts_url": item["google_fonts_url"],
             })
 
-    if not rendered_candidates:
+    if not candidate_defs:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate font candidate renders.",
         )
 
-    # 7. Batch Extract CLIP Visual Embeddings on Device
+    dino_model: torch.nn.Module | None = getattr(app.state, "dino_model", None)
+    dino_transform: Any | None = getattr(app.state, "dino_transform", None)
+
+    def _render_def(defn: dict[str, Any], subtext: str) -> Image.Image:
+        if defn["bytes"] is not None:
+            return render_font_sample_from_bytes(defn["bytes"], subtext, font_size=72)
+        return render_font_sample(defn["path"], subtext, font_size=72)
+
+    # 7. Fine-Grained Matching: DINOv2 whole-word pre-rank, then per-glyph refinement.
     try:
-        # Embed query full crop
-        q_inputs = processor(images=full_crop, return_tensors="pt")
-        q_inputs = {k: v.to(device) for k, v in q_inputs.items()}
-
-        with torch.no_grad():
-            q_out = model.get_image_features(**q_inputs)
-        q_feat = q_out.image_embeds if hasattr(q_out, "image_embeds") else q_out.pooler_output
-        q_feat = q_feat / q_feat.norm(p=2, dim=-1, keepdim=True)
-
-        # Multi-scale patch enhancement for long words
-        if patch_crop is not None:
-            p_inputs = processor(images=patch_crop, return_tensors="pt")
-            p_inputs = {k: v.to(device) for k, v in p_inputs.items()}
+        if dino_model is None or dino_transform is None:
+            # Fallback: single-resolution CLIP cosine if DINOv2 is unavailable.
+            q_inputs = processor(images=query_crop, return_tensors="pt")
+            q_inputs = {k: v.to(device) for k, v in q_inputs.items()}
             with torch.no_grad():
-                p_out = model.get_image_features(**p_inputs)
-            p_feat = p_out.image_embeds if hasattr(p_out, "image_embeds") else p_out.pooler_output
-            p_feat = p_feat / p_feat.norm(p=2, dim=-1, keepdim=True)
-            # 75% full-word macro shape + 25% micro glyph-lead stroke detail
-            q_feat = 0.75 * q_feat + 0.25 * p_feat
+                q_out = model.get_image_features(**q_inputs)
+            q_feat = q_out.image_embeds if hasattr(q_out, "image_embeds") else q_out.pooler_output
             q_feat = q_feat / q_feat.norm(p=2, dim=-1, keepdim=True)
 
-        # Batch embed all dynamically rendered in-memory candidates
-        c_inputs = processor(images=rendered_candidates, return_tensors="pt")
-        c_inputs = {k: v.to(device) for k, v in c_inputs.items()}
+            cand_imgs = [_render_def(d, target_text) for d in candidate_defs]
+            c_inputs = processor(images=cand_imgs, return_tensors="pt")
+            c_inputs = {k: v.to(device) for k, v in c_inputs.items()}
+            with torch.no_grad():
+                c_out = model.get_image_features(**c_inputs)
+            c_feats = c_out.image_embeds if hasattr(c_out, "image_embeds") else c_out.pooler_output
+            c_feats = c_feats / c_feats.norm(p=2, dim=-1, keepdim=True)
+            sims = (c_feats @ q_feat.T).squeeze(1).cpu().numpy()
+        else:
+            # Query: whole-word + per-glyph ink crops composed into one vector
+            q_whole = embed_batch_dino(dino_model, dino_transform, [query_crop], device)[0]
+            query_glyphs = extract_query_glyph_crops(deskewed_full)
+            if query_glyphs:
+                q_feat = compose_fine_feature(
+                    embed_batch_dino(dino_model, dino_transform, [query_crop] + query_glyphs, device)
+                )
+            else:
+                q_feat = q_whole
 
-        with torch.no_grad():
-            c_out = model.get_image_features(**c_inputs)
-        c_feats = c_out.image_embeds if hasattr(c_out, "image_embeds") else c_out.pooler_output
-        c_feats = c_feats / c_feats.norm(p=2, dim=-1, keepdim=True)
+            # Whole-word pass across every candidate (coarse, fast)
+            whole_feats = embed_batch_dino(
+                dino_model, dino_transform,
+                [_render_def(d, target_text) for d in candidate_defs],
+                device,
+            )
+            whole_sims = whole_feats @ q_whole
+            c_feats = whole_feats.copy()
 
-        # Direct cosine similarities
-        sims = (c_feats @ q_feat.T).squeeze(1).cpu().numpy()
+            # Per-glyph refinement for the top-ranked candidates only
+            refine_order = np.argsort(whole_sims)[::-1][: min(FINE_STAGE_LIMIT, len(candidate_defs))]
+            refined_parts: dict[int, list[Image.Image]] = {}
+            refined_images: list[Image.Image] = []
+            for pos in refine_order:
+                p = int(pos)
+                parts = render_candidate_parts(lambda t, _p=p: _render_def(candidate_defs[_p], t), target_text)
+                refined_parts[p] = parts
+                refined_images.extend(parts)
+
+            if refined_images:
+                refined_feats = embed_batch_dino(dino_model, dino_transform, refined_images, device)
+                offset = 0
+                for pos in refine_order:
+                    p = int(pos)
+                    seg = refined_feats[offset : offset + len(refined_parts[p])]
+                    offset += len(refined_parts[p])
+                    c_feats[p] = compose_fine_feature(seg)
+
+            sims = c_feats @ q_feat
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

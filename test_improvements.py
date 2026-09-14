@@ -15,6 +15,10 @@ from main import (
     cache_put_font,
     get_font_pairings,
     init_cache_db,
+    render_candidate_parts,
+    render_font_sample_from_bytes,
+    compose_fine_feature,
+    CANVAS_SIZE,
 )
 
 def test_deskewing():
@@ -90,6 +94,30 @@ def test_font_pairings():
     print(f"Playfair pairings: {serif_pairings}")
     print("✓ Font pairings verified.")
 
+def test_compose_fine_feature():
+    print("Testing fine feature composition...")
+    rng = np.random.default_rng(7)
+    parts = rng.normal(size=(5, 384)).astype(np.float32)
+    parts /= np.linalg.norm(parts, axis=1, keepdims=True)
+    combined = compose_fine_feature(parts)
+    assert abs(float(np.linalg.norm(combined)) - 1.0) < 1e-5, "Output must be L2-normalized"
+    single = compose_fine_feature(parts[:1])
+    assert np.allclose(single, parts[0]), "Single-part input should pass through unchanged"
+    print("✓ Fine feature composition verified.")
+
+def test_render_candidate_parts():
+    print("Testing per-glyph candidate rendering...")
+    with open("fonts/Inter-Regular.ttf", "rb") as fh:
+        data = fh.read()
+    parts = render_candidate_parts(
+        lambda t: render_font_sample_from_bytes(data, t, font_size=72),
+        "Identify",
+    )
+    assert len(parts) >= 2, "Per-glyph rendering should yield whole-word + individual glyphs"
+    for p in parts:
+        assert p.size == CANVAS_SIZE, "All candidate parts must be canvas-resized"
+    print(f"✓ Candidate per-glyph rendering verified ({len(parts)} parts).")
+
 def test_api_e2e():
     print("Testing FastAPI /api/match end-to-end...")
     # Render test image
@@ -137,5 +165,7 @@ if __name__ == "__main__":
     test_stroke_weight_estimation()
     test_sqlite_persistence()
     test_font_pairings()
+    test_compose_fine_feature()
+    test_render_candidate_parts()
     test_api_e2e()
     print("\nALL VERIFICATION TESTS PASSED!")
